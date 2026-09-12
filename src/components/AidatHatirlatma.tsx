@@ -564,7 +564,9 @@ export default function AidatHatirlatma({ talebeler }: { talebeler: Talebe[] }) 
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="genel">Tüm kurs</SelectItem>
+                <SelectItem value="genel">
+                  Tüm kurs (Hazırlık + 1. Seviye + 2. Seviye)
+                </SelectItem>
                 {GRUPLAR.map((g) => (
                   <SelectItem key={g.id} value={g.id}>
                     {g.ad}
