@@ -334,7 +334,7 @@ export default function AidatHatirlatma({ talebeler }: { talebeler: Talebe[] }) 
       <div className="mb-2 flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <Mail className="h-4 w-4 text-muted-foreground" />
-          <span className="text-sm font-medium">Aidat Hatırlatma E-postası</span>
+          <span className="text-sm font-medium">E-posta Merkezi</span>
         </div>
         <Button
           size="icon"
@@ -345,6 +345,33 @@ export default function AidatHatirlatma({ talebeler }: { talebeler: Talebe[] }) 
           {menuAcik ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
         </Button>
       </div>
+
+      {!menuAcik && (
+        <div className="mb-3 grid grid-cols-3 gap-1 rounded-md bg-muted/40 p-1">
+          {(
+            [
+              ["hatirlatma", "Hatırlatma", Mail],
+              ["rapor", "Rapor", FileText],
+              ["mesaj", "Mesaj", PenLine],
+            ] as const
+          ).map(([id, ad, Ikon]) => (
+            <button
+              key={id}
+              type="button"
+              onClick={() => setSekme(id)}
+              className={`flex items-center justify-center gap-1 rounded-sm px-2 py-1.5 text-xs font-medium transition-colors ${
+                sekme === id
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Ikon className="h-3.5 w-3.5" />
+              {ad}
+            </button>
+          ))}
+        </div>
+      )}
+
 
       {menuAcik ? (
         <div className="space-y-4">
