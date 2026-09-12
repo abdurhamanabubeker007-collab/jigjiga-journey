@@ -10,7 +10,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Mail, Send, Check, UserPlus, Trash2, Menu, X } from "lucide-react";
+import {
+  Mail,
+  Send,
+  Check,
+  UserPlus,
+  Trash2,
+  Menu,
+  X,
+  FileText,
+  PenLine,
+  RefreshCw,
+} from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 import {
   GRUPLAR,
   hocaMailAyarDinle,
@@ -24,6 +36,9 @@ import {
   type Talebe,
 } from "@/lib/talebeler";
 import { aidatHatirlatmaGonder } from "@/lib/aidatMail.functions";
+import { serbestMailGonder } from "@/lib/mail.functions";
+import { tamRaporOlustur } from "@/lib/rapor";
+
 
 const AY_ADLARI = [
   "Ocak",
@@ -68,6 +83,22 @@ export default function AidatHatirlatma({ talebeler }: { talebeler: Talebe[] }) 
   const [yeniAd, setYeniAd] = useState("");
   const [yeniEposta, setYeniEposta] = useState("");
   const [yeniGrup, setYeniGrup] = useState<string>("genel");
+
+  const [sekme, setSekme] = useState<"hatirlatma" | "rapor" | "mesaj">(
+    "hatirlatma",
+  );
+  // Rapor sekmesi
+  const [raporAlici, setRaporAlici] = useState("elle");
+  const [raporEposta, setRaporEposta] = useState("");
+  const [raporKapsam, setRaporKapsam] = useState<string>("genel");
+  const [raporKonu, setRaporKonu] = useState("");
+  const [raporMetin, setRaporMetin] = useState("");
+  // Mesaj sekmesi
+  const [mesajAlici, setMesajAlici] = useState("elle");
+  const [mesajEposta, setMesajEposta] = useState("");
+  const [mesajKonu, setMesajKonu] = useState("");
+  const [mesajMetin, setMesajMetin] = useState("");
+
 
   useEffect(() => {
     const unsub = hocaMailAyarDinle((a) => {
@@ -133,6 +164,56 @@ export default function AidatHatirlatma({ talebeler }: { talebeler: Talebe[] }) 
     return [...sabit, ...ekstra];
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [talebeler, ayKey, taslak, ayar.ekstraHocalar]);
+
+  const raporUret = () => {
+    const grupId =
+      raporKapsam === "genel" ? undefined : (raporKapsam as Grup);
+    return tamRaporOlustur({ talebeler, ayKey, ayEtiket, tutar, grupId });
+  };
+
+  useEffect(() => {
+    if (sekme !== "rapor") return;
+    setRaporMetin(raporUret());
+    setRaporKonu(
+      `Kurs Raporu — ${ayEtiket}${
+        raporKapsam === "genel"
+          ? ""
+          : ` (${GRUPLAR.find((g) => g.id === raporKapsam)?.ad ?? ""})`
+      }`,
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sekme, raporKapsam, talebeler, tutar]);
+
+  const seciliEposta = (secim: string, elle: string) => {
+    if (secim === "elle") return elle.trim();
+    return (alicilar.find((a) => a.anahtar === secim)?.eposta ?? "").trim();
+  };
+
+  const serbestGonder = async (
+    tur: "rapor" | "mesaj",
+    eposta: string,
+    konu: string,
+    metin: string,
+  ) => {
+    if (!eposta) {
+      toast.error("Alıcı e-posta adresi gerekli.");
+      return;
+    }
+    if (!konu.trim() || !metin.trim()) {
+      toast.error("Konu ve mesaj boş olamaz.");
+      return;
+    }
+    setGonderiliyor(tur);
+    try {
+      await serbestMailGonder({ data: { eposta, konu, metin } });
+      toast.success(`${eposta} adresine gönderildi.`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "E-posta gönderilemedi.");
+    } finally {
+      setGonderiliyor(null);
+    }
+  };
+
 
   const gonder = async (a: Alici) => {
     const eposta = a.eposta.trim();
@@ -253,7 +334,7 @@ export default function AidatHatirlatma({ talebeler }: { talebeler: Talebe[] }) 
       <div className="mb-2 flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <Mail className="h-4 w-4 text-muted-foreground" />
-          <span className="text-sm font-medium">Aidat Hatırlatma E-postası</span>
+          <span className="text-sm font-medium">E-posta Merkezi</span>
         </div>
         <Button
           size="icon"
@@ -264,6 +345,33 @@ export default function AidatHatirlatma({ talebeler }: { talebeler: Talebe[] }) 
           {menuAcik ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
         </Button>
       </div>
+
+      {!menuAcik && (
+        <div className="mb-3 grid grid-cols-3 gap-1 rounded-md bg-muted/40 p-1">
+          {(
+            [
+              ["hatirlatma", "Hatırlatma", Mail],
+              ["rapor", "Rapor", FileText],
+              ["mesaj", "Mesaj", PenLine],
+            ] as const
+          ).map(([id, ad, Ikon]) => (
+            <button
+              key={id}
+              type="button"
+              onClick={() => setSekme(id)}
+              className={`flex items-center justify-center gap-1 rounded-sm px-2 py-1.5 text-xs font-medium transition-colors ${
+                sekme === id
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Ikon className="h-3.5 w-3.5" />
+              {ad}
+            </button>
+          ))}
+        </div>
+      )}
+
 
       {menuAcik ? (
         <div className="space-y-4">
@@ -362,8 +470,9 @@ export default function AidatHatirlatma({ talebeler }: { talebeler: Talebe[] }) 
             </div>
           </div>
         </div>
-      ) : (
+      ) : sekme === "hatirlatma" ? (
         <>
+
           <p className="mb-3 text-xs text-muted-foreground">
             {ayEtiket} ayı hatırlatması.
             {gonderilmeyen.length > 0 && (
@@ -415,7 +524,176 @@ export default function AidatHatirlatma({ talebeler }: { talebeler: Talebe[] }) 
             Tüm hocalara gönder ({gonderilmeyen.length})
           </Button>
         </>
+      ) : sekme === "rapor" ? (
+        <div className="space-y-3">
+          <p className="text-xs text-muted-foreground">
+            Aidat, tahsilat ve ders durumunu içeren tam kurs raporunu mesûle
+            gönderin. Metni göndermeden önce düzenleyebilirsiniz.
+          </p>
+
+          <div className="space-y-1">
+            <Label className="text-xs">Rapor kapsamı</Label>
+            <Select value={raporKapsam} onValueChange={setRaporKapsam}>
+              <SelectTrigger className="h-9">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="genel">Tüm kurs</SelectItem>
+                {GRUPLAR.map((g) => (
+                  <SelectItem key={g.id} value={g.id}>
+                    {g.ad}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-1">
+            <Label className="text-xs">Alıcı</Label>
+            <Select value={raporAlici} onValueChange={setRaporAlici}>
+              <SelectTrigger className="h-9">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="elle">E-postayı elle yaz</SelectItem>
+                {alicilar
+                  .filter((a) => a.eposta.trim())
+                  .map((a) => (
+                    <SelectItem key={a.anahtar} value={a.anahtar}>
+                      {a.ad} — {a.eposta}
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+            {raporAlici === "elle" && (
+              <Input
+                type="email"
+                inputMode="email"
+                placeholder="mesul@gmail.com"
+                className="h-9"
+                value={raporEposta}
+                onChange={(e) => setRaporEposta(e.target.value)}
+              />
+            )}
+          </div>
+
+          <div className="space-y-1">
+            <Label className="text-xs">Konu</Label>
+            <Input
+              className="h-9"
+              value={raporKonu}
+              onChange={(e) => setRaporKonu(e.target.value)}
+            />
+          </div>
+
+          <div className="space-y-1">
+            <div className="flex items-center justify-between">
+              <Label className="text-xs">Rapor metni</Label>
+              <button
+                type="button"
+                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+                onClick={() => setRaporMetin(raporUret())}
+              >
+                <RefreshCw className="h-3 w-3" /> Yenile
+              </button>
+            </div>
+            <Textarea
+              rows={14}
+              className="font-mono text-xs"
+              value={raporMetin}
+              onChange={(e) => setRaporMetin(e.target.value)}
+            />
+          </div>
+
+          <Button
+            className="w-full"
+            disabled={gonderiliyor === "rapor"}
+            onClick={() =>
+              void serbestGonder(
+                "rapor",
+                seciliEposta(raporAlici, raporEposta),
+                raporKonu,
+                raporMetin,
+              )
+            }
+          >
+            <Send className="mr-2 h-4 w-4" />
+            {gonderiliyor === "rapor" ? "Gönderiliyor..." : "Raporu gönder"}
+          </Button>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          <p className="text-xs text-muted-foreground">
+            Serbest mesaj yazıp istediğiniz kişiye gönderin.
+          </p>
+
+          <div className="space-y-1">
+            <Label className="text-xs">Alıcı</Label>
+            <Select value={mesajAlici} onValueChange={setMesajAlici}>
+              <SelectTrigger className="h-9">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="elle">E-postayı elle yaz</SelectItem>
+                {alicilar
+                  .filter((a) => a.eposta.trim())
+                  .map((a) => (
+                    <SelectItem key={a.anahtar} value={a.anahtar}>
+                      {a.ad} — {a.eposta}
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+            {mesajAlici === "elle" && (
+              <Input
+                type="email"
+                inputMode="email"
+                placeholder="kisi@gmail.com"
+                className="h-9"
+                value={mesajEposta}
+                onChange={(e) => setMesajEposta(e.target.value)}
+              />
+            )}
+          </div>
+
+          <div className="space-y-1">
+            <Label className="text-xs">Konu</Label>
+            <Input
+              className="h-9"
+              placeholder="Konu"
+              value={mesajKonu}
+              onChange={(e) => setMesajKonu(e.target.value)}
+            />
+          </div>
+
+          <div className="space-y-1">
+            <Label className="text-xs">Mesaj</Label>
+            <Textarea
+              rows={10}
+              placeholder="Mesajınızı buraya yazın..."
+              value={mesajMetin}
+              onChange={(e) => setMesajMetin(e.target.value)}
+            />
+          </div>
+
+          <Button
+            className="w-full"
+            disabled={gonderiliyor === "mesaj"}
+            onClick={() =>
+              void serbestGonder(
+                "mesaj",
+                seciliEposta(mesajAlici, mesajEposta),
+                mesajKonu,
+                mesajMetin,
+              )
+            }
+          >
+            <Send className="mr-2 h-4 w-4" />
+            {gonderiliyor === "mesaj" ? "Gönderiliyor..." : "Mesajı gönder"}
+          </Button>
+        </div>
       )}
+
     </div>
   );
 }
