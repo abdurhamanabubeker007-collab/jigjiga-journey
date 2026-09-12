@@ -648,6 +648,18 @@ export default function AidatHatirlatma({ talebeler }: { talebeler: Talebe[] }) 
             <Send className="mr-2 h-4 w-4" />
             {gonderiliyor === "rapor" ? "Gönderiliyor..." : "Raporu gönder"}
           </Button>
+
+          <Button
+            variant="outline"
+            className="w-full"
+            disabled={gonderiliyor === "rapor-tum"}
+            onClick={() => void raporuTumHocalaraGonder()}
+          >
+            <Mail className="mr-2 h-4 w-4" />
+            {gonderiliyor === "rapor-tum"
+              ? "Gönderiliyor..."
+              : `Tüm hocalara gönder (${alicilar.filter((a) => a.eposta.trim()).length})`}
+          </Button>
         </div>
       ) : (
         <div className="space-y-3">
