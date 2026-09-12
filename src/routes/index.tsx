@@ -1573,7 +1573,7 @@ function Index() {
       <Dialog open={mailAcik} onOpenChange={setMailAcik}>
         <DialogContent className="flex h-dvh max-h-none w-full max-w-full flex-col gap-3 rounded-none border-0 p-4 sm:p-6">
           <DialogHeader className="shrink-0">
-            <DialogTitle>Aidat Hatırlatma E-postası</DialogTitle>
+            <DialogTitle>E-posta Merkezi</DialogTitle>
           </DialogHeader>
           <div className="-mx-1 min-h-0 flex-1 overflow-y-auto px-1 py-1">
             <AidatHatirlatma talebeler={talebeler} />
