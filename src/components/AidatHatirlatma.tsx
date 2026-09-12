@@ -165,9 +165,9 @@ export default function AidatHatirlatma({ talebeler }: { talebeler: Talebe[] }) 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [talebeler, ayKey, taslak, ayar.ekstraHocalar]);
 
-  const raporUret = () => {
+  const raporUret = (kapsam: string = raporKapsam) => {
     const grupId =
-      raporKapsam === "genel" ? undefined : (raporKapsam as Grup);
+      kapsam === "genel" ? undefined : (kapsam as Grup);
     return tamRaporOlustur({ talebeler, ayKey, ayEtiket, tutar, grupId });
   };
 
@@ -207,6 +207,32 @@ export default function AidatHatirlatma({ talebeler }: { talebeler: Talebe[] }) 
     try {
       await serbestMailGonder({ data: { eposta, konu, metin } });
       toast.success(`${eposta} adresine gönderildi.`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "E-posta gönderilemedi.");
+    } finally {
+      setGonderiliyor(null);
+    }
+  };
+
+  const raporuTumHocalaraGonder = async () => {
+    const hedefler = alicilar.filter((a) => a.eposta.trim());
+    if (hedefler.length === 0) {
+      toast.error("Gönderilecek kayıtlı hoca e-postası yok.");
+      return;
+    }
+    if (!raporKonu.trim() || !raporMetin.trim()) {
+      toast.error("Konu ve rapor metni boş olamaz.");
+      return;
+    }
+    setGonderiliyor("rapor-tum");
+    try {
+      for (const a of hedefler) {
+        // eslint-disable-next-line no-await-in-loop
+        await serbestMailGonder({
+          data: { eposta: a.eposta.trim(), konu: raporKonu, metin: raporMetin },
+        });
+      }
+      toast.success(`${hedefler.length} hocaya rapor gönderildi.`);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "E-posta gönderilemedi.");
     } finally {
@@ -538,7 +564,9 @@ export default function AidatHatirlatma({ talebeler }: { talebeler: Talebe[] }) 
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="genel">Tüm kurs</SelectItem>
+                <SelectItem value="genel">
+                  Tüm kurs (Hazırlık + 1. Seviye + 2. Seviye)
+                </SelectItem>
                 {GRUPLAR.map((g) => (
                   <SelectItem key={g.id} value={g.id}>
                     {g.ad}
@@ -619,6 +647,18 @@ export default function AidatHatirlatma({ talebeler }: { talebeler: Talebe[] }) 
           >
             <Send className="mr-2 h-4 w-4" />
             {gonderiliyor === "rapor" ? "Gönderiliyor..." : "Raporu gönder"}
+          </Button>
+
+          <Button
+            variant="outline"
+            className="w-full"
+            disabled={gonderiliyor === "rapor-tum"}
+            onClick={() => void raporuTumHocalaraGonder()}
+          >
+            <Mail className="mr-2 h-4 w-4" />
+            {gonderiliyor === "rapor-tum"
+              ? "Gönderiliyor..."
+              : `Tüm hocalara gönder (${alicilar.filter((a) => a.eposta.trim()).length})`}
           </Button>
         </div>
       ) : (
