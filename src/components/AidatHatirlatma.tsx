@@ -10,7 +10,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Mail, Send, Check, UserPlus, Trash2, Menu, X } from "lucide-react";
+import {
+  Mail,
+  Send,
+  Check,
+  UserPlus,
+  Trash2,
+  Menu,
+  X,
+  FileText,
+  PenLine,
+  RefreshCw,
+} from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 import {
   GRUPLAR,
   hocaMailAyarDinle,
@@ -24,6 +36,9 @@ import {
   type Talebe,
 } from "@/lib/talebeler";
 import { aidatHatirlatmaGonder } from "@/lib/aidatMail.functions";
+import { serbestMailGonder } from "@/lib/mail.functions";
+import { tamRaporOlustur } from "@/lib/rapor";
+
 
 const AY_ADLARI = [
   "Ocak",
