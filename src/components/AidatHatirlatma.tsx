@@ -470,8 +470,9 @@ export default function AidatHatirlatma({ talebeler }: { talebeler: Talebe[] }) 
             </div>
           </div>
         </div>
-      ) : (
+      ) : sekme === "hatirlatma" ? (
         <>
+
           <p className="mb-3 text-xs text-muted-foreground">
             {ayEtiket} ayı hatırlatması.
             {gonderilmeyen.length > 0 && (
