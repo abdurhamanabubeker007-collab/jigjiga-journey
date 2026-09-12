@@ -165,6 +165,56 @@ export default function AidatHatirlatma({ talebeler }: { talebeler: Talebe[] }) 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [talebeler, ayKey, taslak, ayar.ekstraHocalar]);
 
+  const raporUret = () => {
+    const grupId =
+      raporKapsam === "genel" ? undefined : (raporKapsam as Grup);
+    return tamRaporOlustur({ talebeler, ayKey, ayEtiket, tutar, grupId });
+  };
+
+  useEffect(() => {
+    if (sekme !== "rapor") return;
+    setRaporMetin(raporUret());
+    setRaporKonu(
+      `Kurs Raporu — ${ayEtiket}${
+        raporKapsam === "genel"
+          ? ""
+          : ` (${GRUPLAR.find((g) => g.id === raporKapsam)?.ad ?? ""})`
+      }`,
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sekme, raporKapsam, talebeler, tutar]);
+
+  const seciliEposta = (secim: string, elle: string) => {
+    if (secim === "elle") return elle.trim();
+    return (alicilar.find((a) => a.anahtar === secim)?.eposta ?? "").trim();
+  };
+
+  const serbestGonder = async (
+    tur: "rapor" | "mesaj",
+    eposta: string,
+    konu: string,
+    metin: string,
+  ) => {
+    if (!eposta) {
+      toast.error("Alıcı e-posta adresi gerekli.");
+      return;
+    }
+    if (!konu.trim() || !metin.trim()) {
+      toast.error("Konu ve mesaj boş olamaz.");
+      return;
+    }
+    setGonderiliyor(tur);
+    try {
+      await serbestMailGonder({ data: { eposta, konu, metin } });
+      toast.success(`${eposta} adresine gönderildi.`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "E-posta gönderilemedi.");
+    } finally {
+      setGonderiliyor(null);
+    }
+  };
+
+
   const gonder = async (a: Alici) => {
     const eposta = a.eposta.trim();
     if (!eposta) {
