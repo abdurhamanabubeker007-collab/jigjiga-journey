@@ -84,6 +84,22 @@ export default function AidatHatirlatma({ talebeler }: { talebeler: Talebe[] }) 
   const [yeniEposta, setYeniEposta] = useState("");
   const [yeniGrup, setYeniGrup] = useState<string>("genel");
 
+  const [sekme, setSekme] = useState<"hatirlatma" | "rapor" | "mesaj">(
+    "hatirlatma",
+  );
+  // Rapor sekmesi
+  const [raporAlici, setRaporAlici] = useState("elle");
+  const [raporEposta, setRaporEposta] = useState("");
+  const [raporKapsam, setRaporKapsam] = useState<string>("genel");
+  const [raporKonu, setRaporKonu] = useState("");
+  const [raporMetin, setRaporMetin] = useState("");
+  // Mesaj sekmesi
+  const [mesajAlici, setMesajAlici] = useState("elle");
+  const [mesajEposta, setMesajEposta] = useState("");
+  const [mesajKonu, setMesajKonu] = useState("");
+  const [mesajMetin, setMesajMetin] = useState("");
+
+
   useEffect(() => {
     const unsub = hocaMailAyarDinle((a) => {
       setAyar(a);
