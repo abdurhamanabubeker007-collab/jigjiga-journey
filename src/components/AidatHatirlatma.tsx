@@ -524,7 +524,176 @@ export default function AidatHatirlatma({ talebeler }: { talebeler: Talebe[] }) 
             Tüm hocalara gönder ({gonderilmeyen.length})
           </Button>
         </>
+      ) : sekme === "rapor" ? (
+        <div className="space-y-3">
+          <p className="text-xs text-muted-foreground">
+            Aidat, tahsilat ve ders durumunu içeren tam kurs raporunu mesûle
+            gönderin. Metni göndermeden önce düzenleyebilirsiniz.
+          </p>
+
+          <div className="space-y-1">
+            <Label className="text-xs">Rapor kapsamı</Label>
+            <Select value={raporKapsam} onValueChange={setRaporKapsam}>
+              <SelectTrigger className="h-9">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="genel">Tüm kurs</SelectItem>
+                {GRUPLAR.map((g) => (
+                  <SelectItem key={g.id} value={g.id}>
+                    {g.ad}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-1">
+            <Label className="text-xs">Alıcı</Label>
+            <Select value={raporAlici} onValueChange={setRaporAlici}>
+              <SelectTrigger className="h-9">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="elle">E-postayı elle yaz</SelectItem>
+                {alicilar
+                  .filter((a) => a.eposta.trim())
+                  .map((a) => (
+                    <SelectItem key={a.anahtar} value={a.anahtar}>
+                      {a.ad} — {a.eposta}
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+            {raporAlici === "elle" && (
+              <Input
+                type="email"
+                inputMode="email"
+                placeholder="mesul@gmail.com"
+                className="h-9"
+                value={raporEposta}
+                onChange={(e) => setRaporEposta(e.target.value)}
+              />
+            )}
+          </div>
+
+          <div className="space-y-1">
+            <Label className="text-xs">Konu</Label>
+            <Input
+              className="h-9"
+              value={raporKonu}
+              onChange={(e) => setRaporKonu(e.target.value)}
+            />
+          </div>
+
+          <div className="space-y-1">
+            <div className="flex items-center justify-between">
+              <Label className="text-xs">Rapor metni</Label>
+              <button
+                type="button"
+                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+                onClick={() => setRaporMetin(raporUret())}
+              >
+                <RefreshCw className="h-3 w-3" /> Yenile
+              </button>
+            </div>
+            <Textarea
+              rows={14}
+              className="font-mono text-xs"
+              value={raporMetin}
+              onChange={(e) => setRaporMetin(e.target.value)}
+            />
+          </div>
+
+          <Button
+            className="w-full"
+            disabled={gonderiliyor === "rapor"}
+            onClick={() =>
+              void serbestGonder(
+                "rapor",
+                seciliEposta(raporAlici, raporEposta),
+                raporKonu,
+                raporMetin,
+              )
+            }
+          >
+            <Send className="mr-2 h-4 w-4" />
+            {gonderiliyor === "rapor" ? "Gönderiliyor..." : "Raporu gönder"}
+          </Button>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          <p className="text-xs text-muted-foreground">
+            Serbest mesaj yazıp istediğiniz kişiye gönderin.
+          </p>
+
+          <div className="space-y-1">
+            <Label className="text-xs">Alıcı</Label>
+            <Select value={mesajAlici} onValueChange={setMesajAlici}>
+              <SelectTrigger className="h-9">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="elle">E-postayı elle yaz</SelectItem>
+                {alicilar
+                  .filter((a) => a.eposta.trim())
+                  .map((a) => (
+                    <SelectItem key={a.anahtar} value={a.anahtar}>
+                      {a.ad} — {a.eposta}
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+            {mesajAlici === "elle" && (
+              <Input
+                type="email"
+                inputMode="email"
+                placeholder="kisi@gmail.com"
+                className="h-9"
+                value={mesajEposta}
+                onChange={(e) => setMesajEposta(e.target.value)}
+              />
+            )}
+          </div>
+
+          <div className="space-y-1">
+            <Label className="text-xs">Konu</Label>
+            <Input
+              className="h-9"
+              placeholder="Konu"
+              value={mesajKonu}
+              onChange={(e) => setMesajKonu(e.target.value)}
+            />
+          </div>
+
+          <div className="space-y-1">
+            <Label className="text-xs">Mesaj</Label>
+            <Textarea
+              rows={10}
+              placeholder="Mesajınızı buraya yazın..."
+              value={mesajMetin}
+              onChange={(e) => setMesajMetin(e.target.value)}
+            />
+          </div>
+
+          <Button
+            className="w-full"
+            disabled={gonderiliyor === "mesaj"}
+            onClick={() =>
+              void serbestGonder(
+                "mesaj",
+                seciliEposta(mesajAlici, mesajEposta),
+                mesajKonu,
+                mesajMetin,
+              )
+            }
+          >
+            <Send className="mr-2 h-4 w-4" />
+            {gonderiliyor === "mesaj" ? "Gönderiliyor..." : "Mesajı gönder"}
+          </Button>
+        </div>
       )}
+
     </div>
   );
 }
